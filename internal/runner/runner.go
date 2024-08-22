@@ -28,6 +28,7 @@ type Options struct {
 	Enrich             bool
 	Limit              int
 	MaxSize            int
+	Numbers            int
 	// internal/unexported fields
 	wordlists goflags.RuntimeMap
 }
@@ -56,6 +57,7 @@ func ParseFlags() *Options {
 	flagSet.CreateGroup("config", "Config",
 		flagSet.StringVar(&opts.Config, "config", "", `alterx cli config file (default '$HOME/.config/alterx/config.yaml')`),
 		flagSet.BoolVarP(&opts.Enrich, "enrich", "en", false, "enrich wordlist by extracting words from input"),
+		flagSet.IntVar(&opts.Numbers, "numbers", 0, "Permute the numbers found in the list of permutations"),
 		flagSet.StringVar(&opts.PermutationConfig, "ac", "", fmt.Sprintf(`alterx permutation config file (default '$HOME/.config/alterx/permutation_%v.yaml')`, version)),
 		flagSet.IntVar(&opts.Limit, "limit", 0, "limit the number of results to return (default 0)"),
 	)

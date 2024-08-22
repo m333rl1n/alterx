@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -40,6 +41,8 @@ type Options struct {
 	Enrich bool
 	// MaxSize limits output data size
 	MaxSize int
+	// Permute the numbers found in the list of permutations
+	Numbers int
 }
 
 // Mutator
@@ -105,7 +108,11 @@ func (m *Mutator) Execute(ctx context.Context) <-chan string {
 	results := make(chan string, len(m.Options.Patterns))
 	go func() {
 		now := time.Now()
+		add_numbers := m.Options.Numbers > 0
 		for _, v := range m.Inputs {
+			if add_numbers {
+				adjustNumberPattern(v.Sub+"."+v.Suffix, m.Options.Numbers, results)
+			}
 			varMap := getSampleMap(v.GetMap(), m.Options.Payloads)
 			for _, pattern := range m.Options.Patterns {
 				if err := checkMissing(pattern, varMap); err == nil {
@@ -252,6 +259,34 @@ func (m *Mutator) clusterBomb(template string, results chan string) {
 		results <- Replace(template, varMap)
 	}
 	ClusterBomb(payloads, callbackFunc, []string{})
+}
+
+func adjustNumberPattern(s string, num int, results chan string) []string {
+	// Find the number in the string using regex
+	re := regexp.MustCompile(`\d+`)
+	matches := re.FindAllStringIndex(s, -1)
+
+	// If no number is found, return an empty slice
+	if len(matches) == 0 {
+		return []string{}
+	}
+
+	var result []string
+
+	for _, match := range matches {
+		startIdx, endIdx := match[0], match[1]
+		originalNumber, _ := strconv.Atoi(s[startIdx:endIdx])
+		currentNum := 1
+		for currentNum <= num {
+			if originalNumber-currentNum > 0 {
+				results <- (s[:startIdx] + strconv.Itoa(originalNumber-currentNum) + s[endIdx:])
+			}
+			results <- (s[:startIdx] + strconv.Itoa(originalNumber+currentNum) + s[endIdx:])
+			currentNum += 1
+		}
+	}
+
+	return result
 }
 
 // prepares input and patterns and calculates estimations

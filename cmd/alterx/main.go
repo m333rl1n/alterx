@@ -19,7 +19,8 @@ func main() {
 		Payloads: cliOpts.Payloads,
 		Limit:    cliOpts.Limit,
 		Enrich:   cliOpts.Enrich, // enrich payloads
-		MaxSize: cliOpts.MaxSize,
+		MaxSize:  cliOpts.MaxSize,
+		Numbers:  cliOpts.Numbers,
 	}
 
 	if cliOpts.PermutationConfig != "" {
